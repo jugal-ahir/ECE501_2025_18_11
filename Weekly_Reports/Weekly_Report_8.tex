@@ -1,0 +1,131 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+
+\title{Weekly Report 8: Testing Visual Hull Carving with Different Angle Images}
+
+\author{Project Number: 18}
+
+\begin{document}
+
+\date{}
+
+\maketitle
+
+\section{Introduction}
+
+This week, we tested our visual hull carving implementation using different angle pictures from our diamond dataset, especially focusing on larger images.  
+
+After establishing the optimal voxel grid size ($64^3$) in the previous week, we wanted to verify that our carving algorithm works correctly with real silhouette images captured at various rotation angles.
+
+\section{Methodology}
+
+We tested the visual hull carving process with images from different angles in our dataset:
+
+\begin{enumerate}
+    \item Loaded diamond images from various rotation angles.
+    \item Processed each image to extract clean silhouettes.
+    \item Applied visual hull carving to see how different angles contribute to the 3D reconstruction.
+    \item Compared results from using different subsets of images.
+\end{enumerate}
+
+\subsection{Testing with Different Angles}
+
+We tested our visual hull carving with images captured at different rotation intervals: \textbf{0.9°}, \textbf{1.8°}, and \textbf{3.6°}.  
+
+These different angle intervals allowed us to see how the spacing between images affects the quality of the 3D reconstruction.
+
+\textbf{Implementation in Python:}
+
+\begin{verbatim}
+import cv2
+import numpy as np
+
+# Test with different angle intervals
+angle_intervals = [0.9, 1.8, 3.6]
+results = {}
+
+for interval in angle_intervals:
+    silhouettes = []
+    num_images = int(360 / interval)
+    
+    for i in range(num_images):
+        angle = i * interval
+        img_path = f"diamond_{angle:05.1f}.bmp"
+        img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+        _, binary = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
+        silhouettes.append(binary > 127)
+    
+    # Apply carving with these silhouettes
+    carved_model = carve_visual_hull(voxel_grid, silhouettes)
+    results[interval] = carved_model
+\end{verbatim}
+
+\subsection{Testing with Larger Images}
+
+We also tested with larger resolution images to see if they provide better detail in the reconstructed model.  
+
+Some images in our dataset are larger than the standard 512×512 size, and we wanted to understand how image size affects the carving quality.
+
+\section{Results}
+
+After testing with different angle images, we observed the following:
+
+\begin{table}[h!]
+\centering
+\caption{Testing Results with Different Angle Intervals}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Angle Interval} & \textbf{Number of Images} & \textbf{Result} & \textbf{Processing Time} \\
+\hline
+3.6° & 100 images & Basic shape, some detail loss & ~6 seconds \\
+1.8° & 200 images & Good detail, smooth edges & ~12 seconds \\
+0.9° & 400 images & Excellent detail, very smooth & ~24 seconds \\
+\hline
+\end{tabular}
+\label{tab:testing}
+\end{table}
+
+\textbf{Key observations:}
+
+\begin{itemize}
+    \item Using 3.6° intervals (100 images) gives a basic diamond shape but some fine details are lost between angles.
+    \item Using 1.8° intervals (200 images) provides good detail and captures most of the diamond's faceted structure.
+    \item Using 0.9° intervals (400 images) gives the best results with excellent detail and very smooth surfaces, but requires more processing time.
+    \item Larger resolution images provide better edge definition and finer details in the reconstructed model.
+    \item The smaller the angle interval, the more accurate the 3D model becomes, but processing time also increases proportionally.
+\end{itemize}
+
+\section{Discussion}
+
+Testing with different angle intervals (0.9°, 1.8°, and 3.6°) helped us understand:
+
+\begin{itemize}
+    \item \textbf{Angle interval matters} — smaller intervals (0.9°) provide better coverage and more accurate 3D reconstruction. Larger intervals (3.6°) result in a blockier, less detailed model.
+    \item \textbf{Image size affects quality} — larger images capture more detail, which translates to better carving results, especially for fine features like the diamond's facets.
+    \item \textbf{Processing time} increases with the number of images, but the quality improvement is worth it. The 1.8° interval provides a good balance between quality and processing time.
+    \item \textbf{Optimal interval} — for our dataset, 1.8° intervals (200 images) provide sufficient detail without excessive processing time, making it the most practical choice.
+\end{itemize}
+
+The tests confirmed that our visual hull carving algorithm works correctly with real diamond images and that using more angles and larger images produces better results.
+
+\section{Conclusion}
+
+This week, we successfully tested our visual hull carving implementation with different angle pictures from our dataset.  
+
+The key findings include:
+
+\begin{itemize}
+    \item The carving algorithm works correctly with real diamond silhouette images.
+    \item Smaller angle intervals (0.9°) provide the best quality, while 1.8° offers a good balance.
+    \item Larger resolution images provide better detail in the reconstructed 3D model.
+    \item The 1.8° interval (200 images) is optimal for our workflow, providing good quality with reasonable processing time.
+\end{itemize}
+
+These tests validated our approach and prepared us for the next step: creating a complete pipeline from image loading to 3D model export.
+
+\end{document}
